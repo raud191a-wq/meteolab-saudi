@@ -1,0 +1,267 @@
+
+
+<!DOCTYPE html>
+
+<html lang="ar" dir="rtl">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+
+content="width=device-width, initial-scale=1">
+
+<title>MeteoLab Saudi</title>
+
+<link rel="stylesheet"
+
+href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<style>
+
+*{box-sizing:border-box}
+
+body{
+
+ margin:0;
+
+ background:#0b1626;
+
+ color:white;
+
+ font-family:Arial,sans-serif;
+
+}
+
+header{
+
+ background:#122740;
+
+ padding:18px;
+
+ text-align:center;
+
+ border-bottom:2px solid #19b5ef;
+
+}
+
+h1{margin:0;color:#57ceff;font-size:25px}
+
+header p{margin:8px 0;font-size:13px}
+
+.panel{
+
+ padding:14px;
+
+ background:#172c45;
+
+}
+
+label{display:block;margin:10px 0 5px}
+
+select{
+
+ width:100%;
+
+ padding:12px;
+
+ border-radius:9px;
+
+ border:1px solid #526b87;
+
+ background:#223c58;
+
+ color:white;
+
+ font-size:16px;
+
+}
+
+#map{
+
+ height:58vh;
+
+ min-height:350px;
+
+ width:100%;
+
+ z-index:1;
+
+}
+
+.status{
+
+ background:#14334b;
+
+ padding:12px;
+
+ font-size:14px;
+
+ line-height:1.8;
+
+}
+
+footer{
+
+ text-align:center;
+
+ padding:16px;
+
+ font-size:12px;
+
+ color:#abc2d8;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<h1>⛈️ MeteoLab Saudi</h1>
+
+<p>منصة عرض وتحليل النماذج العددية</p>
+
+<p>Numerical Weather Prediction</p>
+
+</header>
+
+<div class="panel">
+
+<label>النموذج العددي</label>
+
+<select id="model">
+
+<option>ECMWF</option>
+
+<option>GFS</option>
+
+<option>ICON</option>
+
+</select>
+
+<label>العنصر الجوي</label>
+
+<select id="parameter">
+
+<option>تراكم الأمطار</option>
+
+<option>درجة الحرارة</option>
+
+<option>سرعة الرياح</option>
+
+<option>الضغط الجوي</option>
+
+<option>الارتفاع الجهدي 500 hPa</option>
+
+<option>الارتفاع الجهدي 700 hPa</option>
+
+<option>الانعكاسية المركبة dBZ</option>
+
+</select>
+
+<label>المنطقة</label>
+
+<select id="region">
+
+<option value="21.21,41.63,9">تربة</option>
+
+<option value="21.27,40.42,9">الطائف</option>
+
+<option value="21.39,39.86,8">مكة المكرمة</option>
+
+<option value="23.9,45.1,5">المملكة العربية السعودية</option>
+
+</select>
+
+</div>
+
+<div id="map"></div>
+
+<div class="status" id="status">
+
+المنصة جاهزة لعرض الخريطة التفاعلية.
+
+</div>
+
+<footer>
+
+واجهة تجريبية — لا تعرض توقعات فعلية بعد
+
+<br>
+
+Prepared by: Raed Al-Baqami
+
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+
+const map=L.map('map').setView([21.21,41.63],9);
+
+L.tileLayer(
+
+'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+
+{
+
+ attribution:'&copy; OpenStreetMap contributors',
+
+ maxZoom:18
+
+}
+
+).addTo(map);
+
+L.marker([21.21,41.63])
+
+.addTo(map)
+
+.bindPopup('محافظة تربة');
+
+L.marker([21.27,40.42])
+
+.addTo(map)
+
+.bindPopup('الطائف');
+
+function update(){
+
+ const model=document.getElementById('model').value;
+
+ const parameter=document.getElementById('parameter').value;
+
+ const region=document.getElementById('region').value;
+
+ const parts=region.split(',').map(Number);
+
+ map.setView([parts[0],parts[1]],parts[2]);
+
+ document.getElementById('status').innerHTML=
+
+ 'النموذج المختار: '+model+
+
+ '<br>العنصر: '+parameter+
+
+ '<br>الحالة: واجهة تجريبية، لم تُربط بيانات النموذج بعد.';
+
+}
+
+document.querySelectorAll('select').forEach(el=>{
+
+ el.addEventListener('change',update);
+
+});
+
+update();
+
+</script>
+
+</body>
+
+</html>
