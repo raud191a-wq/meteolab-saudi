@@ -8,111 +8,65 @@
 
 <meta charset="UTF-8">
 
-<meta name="viewport"
+<meta name="viewport" content="width=device-width,initial-scale=1">
 
-content="width=device-width, initial-scale=1">
+<title>MeteoLab Saudi | GFS</title>
 
-<title>MeteoLab Saudi</title>
-
-<link rel="stylesheet"
-
-href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
 <style>
 
 *{box-sizing:border-box}
 
-body{
+body{margin:0;background:#081625;color:#edf7ff;font-family:Arial,Tahoma,sans-serif}
 
- margin:0;
+header{background:#132b43;text-align:center;padding:20px;border-bottom:2px solid #29baf0}
 
- background:#0b1626;
+h1{margin:0;color:#62d5ff;font-size:26px}
 
- color:white;
+header p{font-size:13px;color:#bbd6e8}
 
- font-family:Arial,sans-serif;
+main{max-width:1100px;margin:auto;padding:12px}
 
-}
+.panel{background:#142d46;border-radius:12px;padding:12px;margin-bottom:12px}
 
-header{
+label{display:block;margin:9px 0 5px;color:#c7e3f2;font-size:13px}
 
- background:#122740;
+select,button{font:inherit;border-radius:8px;padding:11px}
 
- padding:18px;
+select{width:100%;background:#23435f;color:white;border:1px solid #56718a}
 
- text-align:center;
+button{background:#176a96;color:white;border:0;cursor:pointer}
 
- border-bottom:2px solid #19b5ef;
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
-}
+#map{height:53vh;min-height:370px;border-radius:12px;z-index:1}
 
-h1{margin:0;color:#57ceff;font-size:25px}
+.leaflet-container{direction:ltr}
 
-header p{margin:8px 0;font-size:13px}
+.leaflet-popup-content{direction:rtl;text-align:right;line-height:1.7}
 
-.panel{
+.timebox{background:#152e47;border-radius:12px;padding:14px;margin:12px 0}
 
- padding:14px;
+#hour{width:100%;accent-color:#39bff4;margin:16px 0}
 
- background:#172c45;
+.controls{display:flex;justify-content:space-between;gap:8px;align-items:center}
 
-}
+.controls button{font-size:12px}
 
-label{display:block;margin:10px 0 5px}
+.status{margin:12px 0;padding:12px;background:#193b54;border-radius:10px;line-height:1.8;font-size:13px}
 
-select{
+.legend{display:flex;align-items:center;flex-wrap:wrap;gap:9px;padding:12px;background:#18334c;border-radius:10px;margin-top:12px}
 
- width:100%;
+.gradient{width:145px;height:13px;border-radius:5px;background:linear-gradient(90deg,#288cdf,#35c7db,#42d6a4,#e8df56,#ffa044,#e9505c,#982a7c)}
 
- padding:12px;
+small{color:#b4cada;line-height:1.8}
 
- border-radius:9px;
+footer{text-align:center;color:#b4cada;padding:22px;font-size:12px;line-height:1.8}
 
- border:1px solid #526b87;
+.leaflet-tooltip.sample-tip{background:#092e44;color:white;border:1px solid #9bd7f3;font-size:11px}
 
- background:#223c58;
-
- color:white;
-
- font-size:16px;
-
-}
-
-#map{
-
- height:58vh;
-
- min-height:350px;
-
- width:100%;
-
- z-index:1;
-
-}
-
-.status{
-
- background:#14334b;
-
- padding:12px;
-
- font-size:14px;
-
- line-height:1.8;
-
-}
-
-footer{
-
- text-align:center;
-
- padding:16px;
-
- font-size:12px;
-
- color:#abc2d8;
-
-}
+@media(max-width:550px){#map{height:48vh}.grid{grid-template-columns:1fr 1fr}}
 
 </style>
 
@@ -126,139 +80,523 @@ footer{
 
 <p>منصة عرض وتحليل النماذج العددية</p>
 
-<p>Numerical Weather Prediction</p>
+<p>GFS Numerical Weather Prediction</p>
+
+<p>Prepared by: Raed Al-Baqami</p>
 
 </header>
 
+<main>
+
 <div class="panel">
+
+<div class="grid">
+
+<div>
 
 <label>النموذج العددي</label>
 
 <select id="model">
 
-<option>ECMWF</option>
-
-<option>GFS</option>
-
-<option>ICON</option>
+<option value="gfs">GFS — NOAA</option>
 
 </select>
+
+</div>
+
+<div>
+
+<label>المدة المتوقعة</label>
+
+<select id="days">
+
+<option value="3">3 أيام</option>
+
+<option value="5" selected>5 أيام</option>
+
+<option value="7">7 أيام</option>
+
+</select>
+
+</div>
+
+<div>
 
 <label>العنصر الجوي</label>
 
-<select id="parameter">
+<select id="variable"></select>
 
-<option>تراكم الأمطار</option>
+</div>
 
-<option>درجة الحرارة</option>
-
-<option>سرعة الرياح</option>
-
-<option>الضغط الجوي</option>
-
-<option>الارتفاع الجهدي 500 hPa</option>
-
-<option>الارتفاع الجهدي 700 hPa</option>
-
-<option>الانعكاسية المركبة dBZ</option>
-
-</select>
+<div>
 
 <label>المنطقة</label>
 
 <select id="region">
 
-<option value="21.21,41.63,9">تربة</option>
+<option value="21.21,41.63,8">تربة وشرق الطائف</option>
 
-<option value="21.27,40.42,9">الطائف</option>
+<option value="21.27,40.42,8">الطائف</option>
 
-<option value="21.39,39.86,8">مكة المكرمة</option>
+<option value="21.39,39.86,7">مكة المكرمة</option>
 
-<option value="23.9,45.1,5">المملكة العربية السعودية</option>
+<option value="23.9,45.1,5">السعودية</option>
 
 </select>
 
 </div>
 
-<div id="map"></div>
+</div>
 
-<div class="status" id="status">
+<button id="reload" style="width:100%;margin-top:12px">
 
-المنصة جاهزة لعرض الخريطة التفاعلية.
+تحديث بيانات GFS
+
+</button>
 
 </div>
 
+<div class="timebox">
+
+<div id="timeLabel">جار تحميل ساعات التوقع...</div>
+
+<input id="hour" type="range" min="0" max="1" value="0" step="1" disabled>
+
+<div class="controls">
+
+<button id="back">الساعة السابقة</button>
+
+<span id="counter">—</span>
+
+<button id="next">الساعة التالية</button>
+
+</div>
+
+</div>
+
+<div id="map"></div>
+
+<div id="legend" class="legend">مفتاح ألوان المؤشر</div>
+
+<div id="status" class="status">جار الاتصال بمصدر البيانات...</div>
+
+<small>
+
+تعرض الخريطة عينات نقطية من توقعات GFS وليست حقولًا شبكية متصلة أو رصدًا راداريًا.
+
+النتائج توقعات عددية وقد تتغير مع تحديثات النموذج.
+
+</small>
+
 <footer>
 
-واجهة تجريبية — لا تعرض توقعات فعلية بعد
+MeteoLab Saudi | Numerical Weather Models
 
 <br>
 
-Prepared by: Raed Al-Baqami
+Data: Open-Meteo GFS API / NOAA
+
+<br>
+
+Map: © OpenStreetMap contributors
 
 </footer>
+
+</main>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
 
-const map=L.map('map').setView([21.21,41.63],9);
+const variables = {
+
+precipitation:["الأمطار خلال الساعة","mm",[0,0.2,1,3,7,15,30]],
+
+temperature_2m:["درجة الحرارة 2m","°C",[0,10,20,30,40,48,55]],
+
+relative_humidity_2m:["الرطوبة النسبية","%",[0,15,30,45,60,80,100]],
+
+wind_speed_10m:["سرعة الرياح 10m","km/h",[0,5,15,25,40,60,90]],
+
+wind_direction_10m:["اتجاه الرياح 10m","°",[0,45,90,135,180,270,360]],
+
+wind_gusts_10m:["هبات الرياح","km/h",[0,15,25,40,55,75,100]],
+
+pressure_msl:["ضغط سطح البحر","hPa",[980,995,1005,1012,1018,1025,1040]],
+
+cloud_cover:["الغطاء السحابي","%",[0,15,30,45,60,80,100]],
+
+cape:["مؤشر CAPE","J/kg",[0,100,300,600,1200,2000,3500]],
+
+convective_inhibition:["مؤشر CIN","J/kg",[-500,-200,-100,-50,-20,-5,0]],
+
+geopotential_height_850hPa:["الارتفاع الجهدي 850 hPa","m",[1350,1450,1500,1550,1600,1650,1750]],
+
+geopotential_height_700hPa:["الارتفاع الجهدي 700 hPa","m",[2850,2950,3050,3150,3250,3350,3450]],
+
+geopotential_height_500hPa:["الارتفاع الجهدي 500 hPa","m",[5500,5600,5700,5800,5900,6000,6100]],
+
+temperature_700hPa:["درجة الحرارة 700 hPa","°C",[-10,-5,0,5,10,15,22]],
+
+temperature_500hPa:["درجة الحرارة 500 hPa","°C",[-28,-22,-17,-12,-7,-2,5]],
+
+wind_speed_700hPa:["سرعة الرياح 700 hPa","km/h",[0,10,20,35,50,70,100]],
+
+wind_direction_700hPa:["اتجاه الرياح 700 hPa","°",[0,45,90,135,180,270,360]],
+
+vertical_velocity_500hPa:["أوميغا 500 hPa","Pa/s",[-2,-1,-0.5,-0.2,0,0.5,2]]
+
+};
+
+const locations = [
+
+["تربة",21.21,41.63],
+
+["الطائف",21.27,40.42],
+
+["مكة",21.39,39.86],
+
+["رنية",21.25,42.85],
+
+["الخرمة",21.91,42.03],
+
+["الباحة",20.01,41.47],
+
+["ميسان",20.75,40.84],
+
+["شرق الطائف",21.50,41.10],
+
+["جنوب تربة",20.70,41.77],
+
+["شمال تربة",21.65,41.65],
+
+["جدة",21.54,39.17],
+
+["عسير",19.55,42.20]
+
+];
+
+const selector = document.getElementById("variable");
+
+for(const [key,value] of Object.entries(variables)){
+
+ const option=document.createElement("option");
+
+ option.value=key;
+
+ option.textContent=value[0];
+
+ selector.appendChild(option);
+
+}
+
+const map=L.map("map").setView([21.21,41.63],8);
 
 L.tileLayer(
 
-'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
 
 {
 
- attribution:'&copy; OpenStreetMap contributors',
+maxZoom:18,
 
- maxZoom:18
+attribution:"© OpenStreetMap contributors"
 
 }
 
 ).addTo(map);
 
-L.marker([21.21,41.63])
+let records=[];
 
-.addTo(map)
+let times=[];
 
-.bindPopup('محافظة تربة');
+let current=0;
 
-L.marker([21.27,40.42])
+let circles=[];
 
-.addTo(map)
+const colors=[
 
-.bindPopup('الطائف');
+"#288cdf",
 
-function update(){
+"#35c7db",
 
- const model=document.getElementById('model').value;
+"#42d6a4",
 
- const parameter=document.getElementById('parameter').value;
+"#e8df56",
 
- const region=document.getElementById('region').value;
+"#ffa044",
 
- const parts=region.split(',').map(Number);
+"#e9505c",
 
- map.setView([parts[0],parts[1]],parts[2]);
+"#982a7c"
 
- document.getElementById('status').innerHTML=
+];
 
- 'النموذج المختار: '+model+
+function getColor(value,levels){
 
- '<br>العنصر: '+parameter+
+ if(value===null || value===undefined || !Number.isFinite(Number(value))){
 
- '<br>الحالة: واجهة تجريبية، لم تُربط بيانات النموذج بعد.';
+  return "#88949e";
+
+ }
+
+ let i=0;
+
+ while(i<levels.length-1 && value>=levels[i+1]){
+
+  i++;
+
+ }
+
+ return colors[Math.min(i,6)];
 
 }
 
-document.querySelectorAll('select').forEach(el=>{
+function setStatus(message){
 
- el.addEventListener('change',update);
+ document.getElementById("status").textContent=message;
+
+}
+
+function render(){
+
+ if(!times.length)return;
+
+ const key=selector.value;
+
+ const meta=variables[key];
+
+ const unit=meta[1];
+
+ const stamp=times[current];
+
+ document.getElementById("timeLabel").textContent=
+
+ "وقت التوقع: "+stamp.replace("T"," ")+" بتوقيت السعودية";
+
+ document.getElementById("counter").textContent=
+
+ (current+1)+" / "+times.length;
+
+ circles.forEach(circle=>map.removeLayer(circle));
+
+ circles=[];
+
+ locations.forEach((location,i)=>{
+
+  const values=records[i]?.hourly?.[key];
+
+  const value=values?.[current]??null;
+
+  const circle=L.circleMarker(
+
+   [location[1],location[2]],
+
+   {
+
+    radius:12,
+
+    color:"#ffffff",
+
+    weight:1.5,
+
+    fillColor:getColor(value,meta[2]),
+
+    fillOpacity:0.88
+
+   }
+
+  ).addTo(map);
+
+  const reading=value===null?
+
+   "غير متاح":
+
+   Number(value).toFixed(1)+" "+unit;
+
+  circle.bindTooltip(
+
+   location[0]+": "+reading,
+
+   {direction:"top",className:"sample-tip"}
+
+  );
+
+  circle.bindPopup(
+
+   "<b>"+location[0]+"</b><br>"+
+
+   meta[0]+": "+reading+
+
+   "<br>الوقت: "+stamp.replace("T"," ")+
+
+   "<br>المصدر: GFS"
+
+  );
+
+  circles.push(circle);
+
+ });
+
+ document.getElementById("legend").innerHTML=
+
+ "<b>"+meta[0]+"</b> "+
+
+ meta[2][0]+" "+unit+
+
+ ' <span class="gradient"></span> '+
+
+ meta[2][meta[2].length-1]+" "+unit;
+
+}
+
+async function loadData(){
+
+ setStatus("جار تحميل بيانات GFS الحقيقية...");
+
+ document.getElementById("reload").disabled=true;
+
+ const params=new URLSearchParams({
+
+  latitude:locations.map(x=>x[1]).join(","),
+
+  longitude:locations.map(x=>x[2]).join(","),
+
+  hourly:Object.keys(variables).join(","),
+
+  forecast_days:document.getElementById("days").value,
+
+  timezone:"Asia/Riyadh",
+
+  wind_speed_unit:"kmh"
+
+ });
+
+ try{
+
+  const url="https://api.open-meteo.com/v1/gfs?"+params.toString();
+
+  const response=await fetch(url);
+
+  if(!response.ok){
+
+   const details=await response.text();
+
+   throw new Error(
+
+    "HTTP "+response.status+" "+details.slice(0,180)
+
+   );
+
+  }
+
+  const data=await response.json();
+
+  records=Array.isArray(data)?data:[data];
+
+  if(!records[0]?.hourly?.time?.length){
+
+   throw new Error("لم ترجع الخدمة بيانات زمنية");
+
+  }
+
+  times=records[0].hourly.time;
+
+  current=0;
+
+  const slider=document.getElementById("hour");
+
+  slider.max=times.length-1;
+
+  slider.value=0;
+
+  slider.disabled=false;
+
+  setStatus(
+
+   "تم تحميل توقعات GFS لعدد "+
+
+   records.length+
+
+   " مواقع. اضغط على الدوائر الملونة لقراءة القيم."
+
+  );
+
+  render();
+
+ }catch(error){
+
+  setStatus(
+
+   "تعذر تحميل البيانات: "+
+
+   error.message+
+
+   ". تحقق من الاتصال وتوفر المتغيرات لدى المصدر."
+
+  );
+
+ }finally{
+
+  document.getElementById("reload").disabled=false;
+
+ }
+
+}
+
+document.getElementById("hour").addEventListener("input",e=>{
+
+ current=Number(e.target.value);
+
+ render();
 
 });
 
-update();
+document.getElementById("next").onclick=()=>{
+
+ if(!times.length)return;
+
+ current=Math.min(times.length-1,current+1);
+
+ document.getElementById("hour").value=current;
+
+ render();
+
+};
+
+document.getElementById("back").onclick=()=>{
+
+ if(!times.length)return;
+
+ current=Math.max(0,current-1);
+
+ document.getElementById("hour").value=current;
+
+ render();
+
+};
+
+selector.addEventListener("change",render);
+
+document.getElementById("days").addEventListener("change",loadData);
+
+document.getElementById("reload").addEventListener("click",loadData);
+
+document.getElementById("region").addEventListener("change",e=>{
+
+ const coordinates=e.target.value.split(",").map(Number);
+
+ map.setView(
+
+  [coordinates[0],coordinates[1]],
+
+  coordinates[2]
+
+ );
+
+});
+
+loadData();
 
 </script>
 
