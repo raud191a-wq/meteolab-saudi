@@ -1,0 +1,39 @@
+
+
+{
+
+  "generated_utc": "2026-10-25T00:58:10Z",
+
+  "layers": [
+
+    {
+
+      "id": "gfs_precip",
+
+      "model": "GFS",
+
+      "parameter": "precip",
+
+      "name": "توقعات الأمطار - GFS",
+
+      "url": "data/gfs_rain.png",
+
+      "bounds": [[15.0, 33.0], [33.0, 57.0]],
+
+      "source": "NOAA GFS",
+
+      "units": "mm",
+
+      "run_utc": "2026-10-24T18:00:00Z",
+
+      "valid_time": "2026-10-25T00:00:00Z",
+
+      "forecast_hour": 6,
+
+      "period": "فترة التراكم غير مؤكدة"
+
+    }
+
+  ]
+
+}
