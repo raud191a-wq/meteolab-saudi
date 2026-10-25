@@ -9,7 +9,7 @@
     {
 
       "id": "gfs_precip",
-
+"system": "forecast",
       "model": "GFS",
 
       "parameter": "precip",
