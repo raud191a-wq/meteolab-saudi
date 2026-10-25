@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>MeteoLab Saudi | منصة الأرصاد السعودية</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{--bg:#091d2c;--panel:#102d42;--line:#31566d;--cyan:#40c7e3;--text:#eef8ff}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;font-family:Tahoma,Arial,sans-serif;background:var(--bg);color:var(--text)}
+#map{position:fixed;inset:0;z-index:1}.leaflet-control-attribution{font-size:9px!important}
+.top{position:fixed;top:env(safe-area-inset-top);right:0;left:0;z-index:1000;display:flex;align-items:center;gap:9px;padding:9px 12px;background:linear-gradient(90deg,#092034eb,#0d3248ef);min-height:60px}
+.brand{flex:1;min-width:0}.brand strong{font-size:17px}.brand small{display:block;color:#a8cad9;font-size:10px;margin-top:3px}
+.btn{border:1px solid #47718a;background:#163b52;color:#fff;border-radius:10px;padding:10px 12px;font:inherit;cursor:pointer}.btn.active,.btn.primary{background:#087f9d;border-color:#35b8d4}
+#drawer{position:fixed;top:calc(60px + env(safe-area-inset-top));bottom:calc(65px + env(safe-area-inset-bottom));right:0;width:min(355px,92vw);z-index:1001;background:#0b2639f5;backdrop-filter:blur(12px);overflow-y:auto;padding:16px;box-shadow:-4px 0 20px #0008;transition:transform .25s}
+#drawer.closed{transform:translateX(105%);pointer-events:none}.section{border:1px solid var(--line);background:#12364b;border-radius:12px;padding:12px;margin-bottom:12px}.section h3{margin:0 0 11px;font-size:15px;color:#bdefff}
+label{display:block;font-size:12px;margin:10px 0 5px;color:#c9e3f0}select,input[type=search]{width:100%;padding:11px;border-radius:8px;border:1px solid #52768a;background:#173f56;color:#fff;font:inherit;font-size:13px}
+select option{background:#173f56}.models,.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.models button,.tabs button{padding:9px 2px;font-size:12px}.tabs{grid-template-columns:repeat(2,1fr)}
+.note{font-size:12px;line-height:1.8;color:#b8d4e3}.note strong{color:#fff}.links{display:grid;grid-template-columns:1fr 1fr;gap:7px}.links a{display:block;text-align:center;text-decoration:none;font-size:12px;color:#d7f7ff;border:1px solid #48768c;border-radius:8px;padding:10px 4px;background:#153e54}
+#bottom{position:fixed;z-index:900;left:10px;right:10px;bottom:calc(9px + env(safe-area-inset-bottom));background:#092538e8;border:1px solid #42738b;border-radius:13px;padding:9px 12px;box-shadow:0 4px 20px #0008}
+#bottom .line{display:flex;gap:10px;align-items:center;justify-content:space-between;font-size:11px}#step{width:100%;accent-color:#38c4e6}#step:disabled{opacity:.4}
+#legend{position:fixed;left:10px;bottom:calc(95px + env(safe-area-inset-bottom));z-index:850;background:#092538dc;padding:8px 10px;border-radius:9px;font-size:11px;max-width:45vw}
+#keyboardBtn{position:fixed;left:12px;top:calc(72px + env(safe-area-inset-top));z-index:1200;display:none}
+#toast{position:fixed;left:50%;transform:translateX(-50%);top:calc(70px + env(safe-area-inset-top));z-index:1200;background:#163c53;border:1px solid #5b8fa5;border-radius:10px;padding:9px 12px;display:none;font-size:12px;max-width:90vw;text-align:center}
+@media(min-width:900px){#drawer{width:365px}.top{right:0;left:auto;width:365px;border-radius:0 0 0 12px}#bottom{right:380px}}
+</style>
+</head>
+<body>
+<div id="map" aria-label="خريطة تفاعلية للمملكة العربية السعودية"></div>
+<header class="top"><button class="btn primary" id="menuBtn" aria-label="فتح لوحة التحكم">☰</button><div class="brand"><strong>⛈ MeteoLab Saudi</strong><small>الأرصاد السعودية | النمذجة والرصد الآني</small></div><button class="btn" id="homeBtn" title="عرض المملكة">⌂</button></header>
+<button id="keyboardBtn" class="btn" type="button">⌨ إخفاء لوحة المفاتيح</button><div id="toast" role="status"></div>
+<aside id="drawer" class="closed">
+ <div class="section"><h3>🗺️ الخريطة والمناطق</h3>
+ <label for="region">اختر المنطقة</label><select id="region"></select>
+ <label for="citySearch">بحث عن مدينة أو محافظة</label><input id="citySearch" type="search" placeholder="مثال: تربة، الطائف، جدة" autocomplete="off"><button class="btn" id="searchBtn" style="width:100%;margin-top:8px">انتقال إلى الموقع</button>
+ <label for="base">الخلفية</label><select id="base"><option value="hybrid">أقمار صناعية هجينة</option><option value="sat">أقمار صناعية فقط</option><option value="osm">خريطة طرق</option></select></div>
+ <div class="section"><h3>🧭 أنظمة الأرصاد</h3><div class="tabs" id="systems"></div><p class="note" id="systemHelp"></p></div>
+ <div class="section" id="forecastControls"><h3>🌦️ النماذج العددية</h3><div class="models" id="models"></div><label for="parameter">المؤشر الجوي</label><select id="parameter"></select><label for="opacity">شفافية الطبقة: <span id="opacityValue">65%</span></label><input id="opacity" type="range" min="0" max="100" value="65" style="width:100%"><p class="note" id="layerInfo">لا توجد بيانات مرتبطة بعد.</p><button class="btn" id="refreshBtn" style="width:100%">تحديث الطبقات</button></div>
+ <div class="section"><h3>🔗 المصادر والمنصات</h3><div class="links" id="officialLinks"></div><p class="note">الروابط تفتح خدمات خارجية. ظهور اسم النظام لا يعني توفر بث مباشر داخل المنصة.</p></div>
+ <div class="section"><h3>ℹ️ حالة البيانات</h3><p class="note" id="dataStatus">جار فحص ملف البيانات…</p><p class="note">إعداد: Raed Al-Baqami<br>الخرائط الأساسية: Esri / OpenStreetMap<br>ليست نشرة رسمية؛ اتبع تنبيهات المركز الوطني للأرصاد.</p></div>
+</aside>
+<div id="legend">الخريطة الأساسية — لا توجد طبقة رصد أو توقع معروضة</div>
+<div id="bottom"><div class="line"><span id="timeText">بانتظار بيانات زمنية</span><span id="frameText">—</span></div><input id="step" type="range" min="0" max="0" value="0" disabled><div class="line"><span id="currentSystem">النماذج العددية</span><span id="currentModel">GFS</span></div></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const map=L.map('map',{zoomControl:false}).setView([24.1,44.3],5);
+L.control.zoom({position:'bottomleft'}).addTo(map);
+const satellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:18,attribution:'© Esri'});
+const labels=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:18,attribution:'© Esri'});
+const osm=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'});
+satellite.addTo(map);labels.addTo(map);
+$('base').onchange=()=>{[satellite,labels,osm].forEach(l=>map.removeLayer(l));if($('base').value==='osm')osm.addTo(map);else{satellite.addTo(map);if($('base').value==='hybrid')labels.addTo(map)}};
+const regions=[['جميع مناطق المملكة',24.1,44.3,5],['الرياض',24.7,46.7,7],['مكة المكرمة',21.5,40.7,8],['المدينة المنورة',24.5,39.6,8],['المنطقة الشرقية',26.4,49.7,7],['القصيم',26.3,43.9,8],['عسير',18.3,42.4,8],['جازان',17.2,42.6,9],['نجران',17.6,44.1,8],['الباحة',20.0,41.5,9],['تبوك',28.4,36.6,7],['حائل',27.5,41.7,8],['الجوف',29.9,40.1,8],['الحدود الشمالية',30.0,42.0,7],['تربة وشرق الطائف',21.3,41.5,9]];
+regions.forEach((r,i)=>$('region').add(new Option(r[0],String(i))));
+$('region').onchange=()=>{const r=regions[+$('region').value];map.setView([r[1],r[2]],r[3]);closeDrawer()};
+const cities=[['تربة',21.21,41.63],['الطائف',21.27,40.42],['جدة',21.54,39.17],['مكة',21.39,39.86],['الرياض',24.71,46.68],['المدينة المنورة',24.47,39.61],['رنية',21.56,42.18],['الخرمة',21.91,42.03],['ميسان',20.75,40.85],['الباحة',20.01,41.47],['أبها',18.22,42.51],['جازان',16.89,42.55],['نجران',17.57,44.23],['الدمام',26.42,50.09],['بريدة',26.36,43.98],['حائل',27.51,41.72],['تبوك',28.38,36.57],['سكاكا',29.97,40.21],['عرعر',30.98,41.04],['خميس مشيط',18.30,42.73],['ينبع',24.09,38.06]];
+const points=L.layerGroup().addTo(map);cities.forEach(c=>L.circleMarker([c[1],c[2]],{radius:3,color:'#fff',weight:1,fillColor:'#00c8ff',fillOpacity:.9}).bindTooltip(c[0]).addTo(points));
+function toast(msg){$('toast').textContent=msg;$('toast').style.display='block';clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>$('toast').style.display='none',3500)}
+$('searchBtn').onclick=()=>{const q=$('citySearch').value.trim();const c=cities.find(x=>x[0]===q)||cities.find(x=>x[0].includes(q)&&q);if(!c){toast('المدينة غير موجودة في قائمة البحث المحلية');return}map.setView([c[1],c[2]],10);closeDrawer();document.activeElement.blur()};
+$('citySearch').addEventListener('keydown',e=>{if(e.key==='Enter')$('searchBtn').click()});
+$('homeBtn').onclick=()=>map.setView([24.1,44.3],5);
+function closeDrawer(){$('drawer').classList.add('closed');$('menuBtn').setAttribute('aria-expanded','false')}
+$('menuBtn').onclick=()=>{const closed=$('drawer').classList.toggle('closed');$('menuBtn').setAttribute('aria-expanded',String(!closed));document.activeElement.blur()};
+map.on('click',()=>{closeDrawer();if(document.activeElement instanceof HTMLElement)document.activeElement.blur()});
+function updateKeyboard(){const el=document.activeElement;const editing=el&&el.matches&&el.matches('input[type="search"],input[type="text"],textarea');$('keyboardBtn').style.display=editing?'block':'none'}
+document.addEventListener('focusin',updateKeyboard);document.addEventListener('focusout',()=>setTimeout(updateKeyboard,80));$('keyboardBtn').onclick=()=>{document.activeElement.blur();$('keyboardBtn').style.display='none'};
+const systems={forecast:{label:'🌦️ النماذج',help:'طبقات GFS وECMWF وICON عند توفر ملفات التوقعات المعالجة.'},satellite:{label:'🛰️ ميتيوسات',help:'صور Meteosat: IR وWV وRGB. تحتاج طبقات صور مرخصة ومؤرخة من EUMETSAT.'},nowcast:{label:'⏱️ التنبؤ الآني',help:'توقع حركة الخلايا خلال 0–2 ساعة، بعد ربط الرادار وبيانات التتبع الفعلية.'},lightning:{label:'⚡ البرق',help:'رصد الومضات يحتاج بيانات معتمدة ذات توقيت وإحداثيات؛ لا تُعرض نقاط افتراضية.'},radar:{label:'📡 الرادار',help:'الانعكاسية المرصودة dBZ تتطلب تغذية رادارية فعلية؛ وهي مختلفة عن محاكاة GFS.'},flood:{label:'🌊 السيول',help:'طبقات مخاطر السيول والفيضانات تتطلب بيانات هيدرولوجية ومطرية وتوقيتًا واضحًا.'}};
+let system='forecast',model='GFS',manifest={layers:[]},overlay=null;
+const params={forecast:[['precip','تراكم الأمطار'],['reflectivity','الانعكاسية المحاكية dBZ'],['wind10','رياح 10m'],['wind850','رياح 850 hPa'],['wind700','رياح 700 hPa'],['wind500','رياح 500 hPa'],['z500','الارتفاع الجهدي 500 hPa'],['z700','الارتفاع الجهدي 700 hPa'],['t2m','الحرارة 2m'],['rh700','الرطوبة 700 hPa'],['cape','CAPE'],['cin','CIN'],['li','Lifted Index'],['ki','K Index'],['srh','SRH'],['shear','قص الرياح'],['hail','مؤشر البرد']],satellite:[['ir','Meteosat IR'],['wv','Meteosat WV'],['rgb','Meteosat RGB']],nowcast:[['cell_motion','حركة الخلايا 0–2 ساعة'],['rain_nowcast','الهطول الآني']],lightning:[['flashes','الومضات البرقية']],radar:[['radar_dbz','انعكاسية الرادار المرصودة'],['radar_velocity','سرعة دوبلر']],flood:[['flood_risk','مخاطر السيول'],['river_flood','فيضانات الأودية والأنهار']]};
+Object.entries(systems).forEach(([key,v])=>{const b=document.createElement('button');b.className='btn'+(key===system?' active':'');b.textContent=v.label;b.dataset.system=key;b.onclick=()=>{system=key;document.querySelectorAll('#systems button').forEach(x=>x.classList.toggle('active',x.dataset.system===system));$('systemHelp').textContent=systems[system].help;$('forecastControls').style.display=system==='forecast'?'block':'none';$('currentSystem').textContent=systems[system].label;populateParams();renderLayer()};$('systems').appendChild(b)});
+$('systemHelp').textContent=systems.forecast.help;
+['GFS','ECMWF','ICON'].forEach(m=>{const b=document.createElement('button');b.className='btn'+(m===model?' active':'');b.textContent=m;b.onclick=()=>{model=m;document.querySelectorAll('#models button').forEach(x=>x.classList.toggle('active',x.textContent===model));$('currentModel').textContent=model;renderLayer()};$('models').appendChild(b)});
+function populateParams(){const s=$('parameter');s.replaceChildren();params[system].forEach(([value,label])=>s.add(new Option(label,value)))}populateParams();$('parameter').onchange=renderLayer;
+$('opacity').oninput=()=>{$('opacityValue').textContent=$('opacity').value+'%';if(overlay)overlay.setOpacity(+$('opacity').value/100)};
+$('step').oninput=renderLayer;
+const sources=[['المركز الوطني للأرصاد','https://ncm.gov.sa'],['EUMETSAT','https://view.eumetsat.int/'],['NOAA GFS','https://nomads.ncep.noaa.gov/'],['ECMWF','https://www.ecmwf.int/en/forecasts/datasets/open-data'],['DWD ICON','https://opendata.dwd.de/weather/nwp/'],['Copernicus GloFAS','https://global-flood.emergency.copernicus.eu/'],['NASA GPM','https://gpm.nasa.gov/'],['EUMETSAT Data Store','https://data.eumetsat.int/']];
+sources.forEach(([name,url])=>{const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.textContent=name;$('officialLinks').appendChild(a)});
+function validBounds(b){return Array.isArray(b)&&b.length===2&&b.every(p=>Array.isArray(p)&&p.length===2&&p.every(v=>typeof v==='number'&&Number.isFinite(v)))&&b[0][0]<b[1][0]&&b[0][1]<b[1][1]}
+function getFrames(){return manifest.layers.filter(x=>x.system===system&&(system==='forecast'?x.model===model:true)&&x.parameter===$('parameter').value&&validBounds(x.bounds)&&typeof x.url==='string').sort((a,b)=>String(a.valid_time||'').localeCompare(String(b.valid_time||'')))}
+function renderLayer(){if(overlay){map.removeLayer(overlay);overlay=null}const frames=getFrames(),slider=$('step');slider.max=Math.max(0,frames.length-1);slider.disabled=frames.length<2;if(+slider.value>=frames.length)slider.value='0';const f=frames[+slider.value];$('frameText').textContent=frames.length?`${+slider.value+1} / ${frames.length}`:'—';
+if(!f){$('timeText').textContent='لا توجد بيانات زمنية متصلة';$('legend').textContent='الخريطة الأساسية — لا توجد طبقة رصد أو توقع معروضة';$('layerInfo').textContent='لم تُربط بيانات حقيقية لهذا المؤشر بعد.';return}
+try{const u=new URL(f.url,location.href);if(u.protocol!=='https:'&&u.origin!==location.origin)throw Error('عنوان غير آمن');overlay=L.imageOverlay(u.href,f.bounds,{opacity:+$('opacity').value/100,interactive:false}).addTo(map);overlay.on('error',()=>toast('تعذر تحميل صورة الطبقة'));$('timeText').textContent='الوقت: '+(f.valid_time||'غير محدد');$('legend').textContent=(f.title||$('parameter').selectedOptions[0].textContent)+' | '+(f.units||'الوحدة غير محددة');$('layerInfo').textContent='المصدر: '+(f.source||'غير محدد')+' | الفترة: '+(f.period||'غير محددة')+' | '+(f.valid_time||'');}catch(e){toast('تعذر قراءة بيانات الطبقة')}}
+async function loadData(){try{const res=await fetch('./data/manifest.json?ts='+Date.now(),{cache:'no-store'});if(!res.ok)throw Error('no manifest');const data=await res.json();if(!Array.isArray(data.layers))throw Error('bad manifest');manifest=data;$('dataStatus').textContent='تم العثور على ملف البيانات: '+data.layers.length+' طبقة معرفة.'}catch(e){manifest={layers:[]};$('dataStatus').textContent='الواجهة والخريطة تعملان. ملف data/manifest.json غير متوفر أو غير صالح؛ لم تُربط طبقات الرصد والتوقعات بعد.'}renderLayer()}
+$('refreshBtn').onclick=loadData;loadData();setTimeout(()=>map.invalidateSize(),350);
+</script>
+</body>
+</html>
